@@ -3,7 +3,6 @@ const contactsController = require("../../controllers/contactsController");
 const {
   isValidateId,
   validationBody,
-  validationBodyFavorite,
   authenticate,
 } = require("../../middlewares");
 const schemas = require("../../schemas/contactsSchemas");
@@ -45,7 +44,7 @@ router.patch(
   "/:contactId/favorite",
   authenticate,
   isValidateId,
-  validationBodyFavorite(schemas.contactUpdateFavoriteSchema),
+  validationBody(schemas.contactUpdateFavoriteSchema),
   contactsController.updateStatusContact
 );
 
