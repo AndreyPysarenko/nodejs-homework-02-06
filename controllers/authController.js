@@ -82,19 +82,19 @@ const logout = async (req, res) => {
 };
 
 const updateAvatar = async (req, res) => {
-  const { _id } = req.user;
-  const { path: tempUpload, originalname } = req.file;
-
   if (!req.file) {
     throw HttpError(400, "File not found");
   }
+
+  const { _id } = req.user;
+  const { path: tempUpload, originalname } = req.file;
 
   const filename = `${_id}_${originalname}`;
   const resultUpload = path.join(avatarsDir, filename);
 
   imgSizeTransform(tempUpload, resultUpload);
 
-  await fs.rename(tempUpload, resultUpload);
+  await fs.unlink(tempUpload);
   const avatarUrl = path.join("avatars", filename);
   await User.findByIdAndUpdate(_id, { avatarUrl });
   res.json({ avatarUrl });
