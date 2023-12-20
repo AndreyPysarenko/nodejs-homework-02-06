@@ -6,7 +6,7 @@ const gravatar = require("gravatar");
 
 const { User } = require("../models/user");
 const { HttpError, ctrlWrapper } = require("../helpers");
-const imgSizeTransform = require("../helpers/imgSizeTransform");
+const jimp = require("../helpers/jimp");
 const { SECRET_KEY } = process.env;
 
 const avatarsDir = path.join(__dirname, "../", "public", "avatars");
@@ -92,12 +92,12 @@ const updateAvatar = async (req, res) => {
   const filename = `${_id}_${originalname}`;
   const resultUpload = path.join(avatarsDir, filename);
 
-  imgSizeTransform(tempUpload, resultUpload);
+  jimp(tempUpload, resultUpload);
 
-  await fs.unlink(tempUpload);
-  const avatarUrl = path.join("avatars", filename);
-  await User.findByIdAndUpdate(_id, { avatarUrl });
-  res.json({ avatarUrl });
+  await fs.rename(tempUpload, resultUpload);
+  const avatarURL = path.join("avatars", filename);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+  res.json({ avatarURL });
 };
 
 module.exports = {
