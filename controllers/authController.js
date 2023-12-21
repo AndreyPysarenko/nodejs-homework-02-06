@@ -1,8 +1,15 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+const fs = require("fs/promises");
+const gravatar = require("gravatar");
+
 const { User } = require("../models/user");
 const { HttpError, ctrlWrapper } = require("../helpers");
+const jimp = require("../helpers/jimp");
 const { SECRET_KEY } = process.env;
+
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -13,8 +20,13 @@ const register = async (req, res) => {
   }
 
   const hasPassword = await bcrypt.hash(password, 10);
+  const avatarURL = gravatar.url(email);
 
-  const newUser = await User.create({ ...req.body, password: hasPassword });
+  const newUser = await User.create({
+    ...req.body,
+    password: hasPassword,
+    avatarURL,
+  });
 
   res.status(201).json({
     user: {
@@ -45,7 +57,7 @@ const login = async (req, res) => {
   await User.findByIdAndUpdate(user._id, { token });
   const { subscription } = user;
 
-  res.status(200).json({
+  res.json({
     token,
     user: {
       email,
@@ -57,7 +69,7 @@ const login = async (req, res) => {
 const getCurrent = async (req, res) => {
   const { email, subscription } = req.user;
 
-  res.status(200).json({
+  res.json({
     email,
     subscription,
   });
@@ -69,9 +81,29 @@ const logout = async (req, res) => {
   res.status(204).send();
 };
 
+const updateAvatar = async (req, res) => {
+  if (!req.file) {
+    throw HttpError(400, "File not found");
+  }
+
+  const { _id } = req.user;
+  const { path: tempUpload, originalname } = req.file;
+
+  const filename = `${_id}_${originalname}`;
+  const resultUpload = path.join(avatarsDir, filename);
+
+  jimp(tempUpload, resultUpload);
+
+  await fs.rename(tempUpload, resultUpload);
+  const avatarURL = path.join("avatars", filename);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+  res.json({ avatarURL });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
