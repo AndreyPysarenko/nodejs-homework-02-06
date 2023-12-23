@@ -10,6 +10,12 @@ router.post(
   validationBody(schemas.registerSchemas),
   authController.register
 );
+router.get("/verify/:verificationToken", authController.verify);
+router.post(
+  "/verify",
+  validationBody(schemas.emailSchemas),
+  authController.resendVerifyEmail
+);
 router.post(
   "/login",
   validationBody(schemas.loginSchemas),
@@ -17,6 +23,11 @@ router.post(
 );
 router.get("/current", authenticate, authController.getCurrent);
 router.post("/logout", authenticate, authController.logout);
-router.patch("/avatars", authenticate, upload.single("avatar"), authController.updateAvatar)
+router.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatar"),
+  authController.updateAvatar
+);
 
 module.exports = router;
